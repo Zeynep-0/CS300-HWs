@@ -1,181 +1,215 @@
 #include <iostream>
-#include "stack.h"
 #include <fstream>
-#include <string>
 #include <vector>
+#include <string>
 using namespace std;
 
 //Author: Zeynep Taskin 33851
-//Date: 28.10.2024 
-//Purpose: This program solves the N-queens problem and creates a file to hold the found solutions.
+//Date: 31.12.2024 
+//Purpose: This program cheks if graphs are bipartate then find the max matching number in bipartite graphs.
 
-struct BoardNodes { // struct to hold the state of the board during backtracking
-	int rowNum;
-	vector<int> queenPositions; // vector to hold queens colummn positions
-
+struct node {//structure to hold the vertices
+	string name;//name of thertex
+	node* connectedVertices;//vertices connected to the vertex
+	node(string n = "", node* cV = nullptr) :name(n), connectedVertices(cV) {};
 };
 
-bool isSafe(int** matrix,int rowNo, int colNo) { // function to check if a position is safe
-	if (matrix[rowNo][colNo] == 0) { // if the position is 0, it's safe
-		return true;
-	}return false;
-}
+bool isBipartite(vector<bool>& bipartite1, vector<bool>& bipartite2, vector<node*> graph) {// function to check if a graph is bipartite
+	bool bipartite = true;//bool to determine bipartite
 
-void putQueen(int** & matrix, int rowNo, int colNo,int N) { // function to update the safe matrix and add a queen
-	if (isSafe(matrix, rowNo, colNo)) { // check if the position is safe
-		for (int i = 0; i < N; i++) {
-			matrix[rowNo][i] += 1; // increment the entire row
-		}
-		for (int i = 1; i < N; i++) {
-			matrix[i][colNo] += 1; // increment the entire column
-		}
-		for (int i = 1; i < N; i++) { // increment the four diagonals
-			if (-1< rowNo - i && -1 < colNo-i) {
-				matrix[rowNo - i][colNo - i] += 1; // upper-left diagonal
-			}
-			if (rowNo + i < N && colNo + i < N) {
-				matrix[rowNo + i][colNo + i] += 1; // lower-right diagonal
-			}
-			if (-1 < rowNo - i && N> colNo + i) {
-				matrix[rowNo - i][colNo + i] += 1; // upper-right diagonal
-			}
-			if (rowNo + i < N && colNo - i > -1) {
-				matrix[rowNo + i][colNo - i] += 1; // lower-left diagonal
-			}
-		}
-		
-	}
-}
-
-void removeQueen(int**& matrix, int rowNo, int colNo, int N) { // function to update the safe matrix and remove a queen
-	if (isSafe(matrix, rowNo, colNo)==0) {
-		for (int i = 0; i < N; i++) {
-			matrix[rowNo][i] -= 1; // decrement the entire row
-		}
-		for (int i = 1; i < N; i++) {
-			matrix[i][colNo] -= 1; // decrement the entire column
-		}
-		for (int i = 1; i < N; i++) { // decrement the four diagonals
-			if (-1 < rowNo - i && -1 < colNo - i) { 
-				matrix[rowNo - i][colNo - i] -= 1; // upper-left diagonal
-			}
-			if (rowNo + i < N && colNo + i < N) {
-				matrix[rowNo + i][colNo + i] -= 1; // lower-right diagonal
-			}
-			if (-1 < rowNo - i && N > colNo + i) {
-				matrix[rowNo - i][colNo + i] -= 1; // upper-right diagonal
-			}
-			if (rowNo + i < N && colNo - i > -1) {
-				matrix[rowNo + i][colNo - i] -= 1; // lower-left diagonal
-			}
-		}
-	}
-}
-
-int popLast(vector<int>& queenPos) { // function to update an integer vector and get its last added integer
-	int lastPos=queenPos[queenPos.size()-1]; // get the last position of a queen
-	queenPos.pop_back(); // remove the position
-	return lastPos; // return the column number
-}
-
-// function to backtrack
-void backTrack(int& i, int& j, int N, int**& board, BoardNodes& newState, Stack<BoardNodes>& boardStack) {
-	BoardNodes backtrack = boardStack.pop(); // pop the last state
-	i = backtrack.rowNum; // update the row 
-	j = popLast(backtrack.queenPositions); // update the column to the column of the queen
-	newState.queenPositions = backtrack.queenPositions; // update the state
-	removeQueen(board, i, j, N); // remove the queen from the board
-}
-int main() {
-	int N;
-	cout << "Enter the value of N for the N-Queens problem: "; // get input
-	cin >> N;
-	if (N < 1) { // if input is invalid give appropriate message
-		cout << "Invalid input. Please enter a positive integer";
-	}
-	else {
-		// create the board as a safe matrix
-		// with all positions being 0
-		int** board = new int* [N];
-		for (int i = 0; i < N; i++) {
-			board[i] = new int [N];
-			for (int j = 0; j < N; j++) {
-				board[i][j] = 0;
-			}
-		} 
-
-		Stack<BoardNodes> boardStack; // create a stack for backtracking
-		vector<vector<int>> solutions; // create a vector to hold solutions
-		BoardNodes initialState; // node for the initial state of the board
-		BoardNodes newState; // node for new states of the board
-		initialState.rowNum = 0;
-		initialState.queenPositions = {};
-		boardStack.push(initialState); // push the initial state to the stack
-
-		while (boardStack.isEmpty() == 0) { // while stack is not empty
-			for (int rowNo = 0; rowNo < N; rowNo++) {
-				for (int columnNo = 0; columnNo < N; columnNo++) {
-					// check each position
-					if (isSafe(board, rowNo, columnNo)) {
-						putQueen(board, rowNo, columnNo, N); // put the queen
-						// update the state
-						newState.rowNum = rowNo; // update the row number
-						newState.queenPositions.push_back(columnNo); // add the queen's column position
-						boardStack.push(newState); // push the state
-						// check if there are more rows
-						if (newState.rowNum != N - 1) {
-							rowNo++; // move to the next row
-							columnNo = -1; // start from the first position of that row
-						}
-						else {
-							solutions.push_back(newState.queenPositions); // add the solution
-							backTrack(rowNo, columnNo, N, board, newState, boardStack); // backtrack
-							if (columnNo == N - 1 && rowNo != 0) { // if there is no more column left in the row
-								backTrack(rowNo, columnNo, N, board, newState, boardStack);
+	for (int i = 0; i < graph.size(); i++) {//get every vertex
+		if (graph[i] != nullptr) {//if vertex exists
+			if (!bipartite1[i]) {
+				if (!bipartite2[i]) {
+					//if vertex is not in any side
+					bipartite1[i] = true;//add the vertex to the left side
+					node* temp = graph[i]->connectedVertices;//get the vetices connected
+					while (temp != nullptr) {
+						if (!bipartite1[stoi(temp->name)]) {
+							if (!bipartite2[stoi(temp->name)]) {
+								//if vertex is not in any side
+								bipartite2[stoi(temp->name)] = true;// add it to the right side
 							}
 						}
+						else {//if it is in the same side 
+							bipartite = false;//the graph is not bipartite
+							return bipartite;
+						}
+						temp = temp->connectedVertices;//get the next vertex connected
 					}
-					else if (columnNo == N - 1) { // if there is no safe positions in the row
-						backTrack(rowNo, columnNo, N, board, newState, boardStack); // backtrack
-						if (columnNo == N - 1 && rowNo != 0) { // if there is no more column left in the row
-							backTrack(rowNo, columnNo, N, board, newState, boardStack);
+				}
+				else {
+					//the vertex is in the right side
+					node* temp = graph[i]->connectedVertices;//get the connected vertices
+					while (temp != nullptr) {
+						if (!bipartite2[stoi(temp->name)]) {
+							if (!bipartite1[stoi(temp->name)]) {
+								//if vertex is not in any side
+								bipartite1[stoi(temp->name)] = true;// add it to the left side
+
+							}
+						}
+						else {//if it is in the same side 
+							bipartite = false;//the graph is not bipartite
+							return bipartite;
+						}
+						temp = temp->connectedVertices;//get the next vertex connected
+					}
+				}
+			}
+			else {
+				//the vertex is in the left side
+				node* temp = graph[i]->connectedVertices;//get the connected vertices
+				while (temp != nullptr) {
+					if (!bipartite1[stoi(temp->name)]) {
+						if (!bipartite2[stoi(temp->name)]) {
+							//if vertex is not in any side
+							bipartite2[stoi(temp->name)] = true;// add it to the right side
 						}
 					}
+					else {//if it is in the same side 
+						bipartite = false;//the graph is not bipartite
+						return bipartite;
+					}
+					temp = temp->connectedVertices;//get the next vertex connected
+				}
+			}
+		}
+	}
+	return bipartite;
+}
 
-					/* if backtracked into the last
-					column of the first row there
-					are no other solutions left */
-					if (rowNo == 0 && columnNo == N - 1) {
-						boardStack.pop(); // pop the initial state
-						// break the for loops
-						rowNo = N;
-						columnNo = rowNo;
+int maxMatching(vector<node*> g, vector<bool>& bipartite1) {//function to find the max matching in a bipartite graph
+	int maxMatch = 0;//integer to hold the max match
+	vector<int> path(g.size(), -1);//vector to hold the path of matched vertices
+	for (int i = 1; i < g.size(); i++) {
+		if (bipartite1[i] && g[i] != nullptr) {//check the vertices in the left side
+			node* t = g[i]->connectedVertices;//get the connected vertex
+			while (t != nullptr && path[stoi(t->name)] != -1) {//if there is a connected vertex and it is matched
+				t = t->connectedVertices;//go to the next connected vertex
+			}
+			if (t != nullptr) {//if vertex exists and is not matched
+				path[stoi(t->name)] = stoi(g[i]->name);//match the vertices
+				maxMatch++;//increase the max matching
+			}
+			else {//if there is no available match
+				vector<bool> visit(g.size(), false);//create a visit vector to not visit a vertex more than once
+				vector<int> stack;//stack to hold the vertices that can be unmatched
+				stack.push_back(i);//push the vertex
+
+				while (!stack.empty()) {//if there is vertex to match
+					int current = stack.back();//get the current unmatched vertex from the stack
+					stack.pop_back();//remove from the stack
+					if (!visit[current]) {//if the vertex is not visited
+						visit[current] = true;//make the vertex match
+						node* temp = g[current]->connectedVertices;//get the connected vertex
+						while (temp != nullptr) {
+							int v = stoi(temp->name);
+							if (path[v] == -1) {//if the vertex is not matched
+								path[v] = current;//match it to the unmatched vertex
+								maxMatch++;//increase the max match
+								stack.clear();//clear the stack
+								break;//go to the next node
+							}
+							else {//if the vertex is matched
+								if (!visit[path[v]]) {
+									stack.push_back(path[v]);//push the vertex to the stack
+								}
+							}
+							temp = temp->connectedVertices;//go to the next connected vertex
+						}
 					}
 				}
 			}
 		}
-
-		string filename = to_string(N) + "queens_solutions.txt"; // create the file name
-		ofstream file(filename); // create the file
-		int solutionNumber = solutions.size();
-		file << "Total solutions for N=" << N << ": " << solutionNumber;
-		file << endl << endl;
-		for (int i = 0; i < solutionNumber; i++) { // write the solutions to the file one by one
-			file << "Solution " << i + 1 << ": ";
-			file << "[";
-			for (int j = 0; j < N - 1; j++) {
-				file << solutions[i][j] << ", ";
-			}
-			file << solutions[i][N - 1];
-
-			file << "]" << endl;
-		}
-		cout << "Solutions have been saved to \'" << N << "queens_solutions.txt\'";
-		file.close(); // close the file
-		for (int i = 0; i < N; i++) {
-			delete[] board[i];
-		}
-		delete board;
 	}
+	return maxMatch;//return the max match
+}
+
+
+
+int main() {
+
+	string graphName;//input graph name
+	string read;//string to get the numbers in txt file
+	string nextNode;//string to hold the connected vertex name
+	cout << "Enter the graph name (e.g., 'graph1' or 'exit' to terminate): ";
+	cin >> graphName;//get the input file
+	while (graphName != "exit") {//until the exit is inputted
+		ifstream graphFile;
+		graphName = graphName + ".txt";//create the graphs name
+		graphFile.open(graphName);//open the file
+		graphFile >> read;//read the number of vertices
+		vector<node*> graph(stoi(read), nullptr);//create the vector to hold the graph as adjacency list
+		graphFile >> read;//read the number of edges
+		int edgeCount = stoi(read);
+		string vertexName;//string to hold the vertex's name
+
+		for (int i = 0; i < edgeCount; i++) {//read each edge
+			graphFile >> read;//get the vertex
+			graphFile >> nextNode;//get the connected vertex
+			node* nextN = new node(nextNode);//connected vertex node
+			if (graph[stoi(read)] != nullptr && graph[stoi(read)]->name == read) {//if the vertex already in the graph
+				node* temp = graph[stoi(read)];
+				while (temp->connectedVertices != nullptr) {//go to the end of the adjacency list of the vertex
+					temp = temp->connectedVertices;
+				}
+				temp->connectedVertices = nextN;//add the connected vertex to the list of the main vertex
+			}
+			else {//if the vertex is npt in  the graph
+				vertexName = read;
+				node* vertex = new node(vertexName, nextN);
+				graph[stoi(read)] = vertex;//add it to the vertex
+			}
+
+		}
+		graphFile.close();//close the file
+		vector<bool> bipartite1(graph.size(), false);//left side of the bipartite graph
+		vector <bool>bipartite2(graph.size(), false);//right side of the bipartite graph
+
+		bool bipartite = isBipartite(bipartite1, bipartite2, graph);//check if the graph is bipartite
+		if (!bipartite) {
+			cout << "The graph is not bipartite." << endl;
+		}
+		else {//if it is bipartite
+			cout << "The graph is bipartite." << endl;
+			for (int i = 0; i < graph.size(); i++) {//add the right side to the graph as well
+				if (bipartite1[i]) {//find left side vertices
+					node* temp = graph[i];
+					if (temp != nullptr) {
+						node* temp2 = graph[i]->connectedVertices;//get the right side vertex
+						while (temp2 != nullptr) {
+							if (graph[stoi(temp2->name)] == nullptr) {//if the vertex is not in the graph
+								graph[stoi(temp2->name)] = new node;//create a node
+								graph[stoi(temp2->name)]->connectedVertices = new node(temp->name);//add the left side as a connected vertex
+								graph[stoi(temp2->name)]->name = temp2->name;//assign the name of the right side vertex to the graph position
+								temp2 = temp2->connectedVertices;//go to the next vertex
+							}
+							else {//if vertex is already in the graph
+								node* t = graph[stoi(temp2->name)]->connectedVertices;//get the connected vertex
+								while (t->connectedVertices != nullptr) {//go to the end of the adjacency list
+									t = t->connectedVertices;
+								}
+								t->connectedVertices = new node(temp->name);//add to the end of the list
+								temp2 = temp2->connectedVertices;// go to the next vertex
+
+							}
+
+						}
+					}
+				}
+			}
+			int maxMatchNo = maxMatching(graph, bipartite1);//find the max matching
+			cout << "Maximum matching size: " << maxMatchNo << endl;
+		}
+		for (int i = 0; i < graph.size();i++) {
+			//deallocate the dynamically allocated memory in graph
+			delete graph[i];
+		}
+		
+		cout << "Enter the graph name (e.g., 'graph1' or 'exit' to terminate): ";
+		cin >> graphName;//get the next graph
+	}
+	
 	return 0;
 }
