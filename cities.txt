@@ -1,7 +1,0 @@
-100 100
-South_Sarah 21 70
-Lake_Abigail 22 64
-Port_Maria 21 62
-Port_Evan 21 66
-Smithport 26 61
-New_Kellybury 25 65
